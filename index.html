@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discord Messages</title>
+</head>
+<body>
+
+    <div class="grid-container">
+
+        <!-- Profile Picture Upload -->
+        <div class="grid-item">
+            <img id="pfp" alt="This username does not have an Avatar please select and upload one from below" style="width: 100%; margin-right: 10px;">
+            <input  class="imginput" type="file" id="fileInput" />
+            <button class="uploadpfp" id="uploadBtn">Upload profile picture</button>
+            <p id="images"></p>
+            <blockquote>
+                "This is the best service I've ever used!" — Happy Customer
+            </blockquote>
+        </div>
+
+        <!-- Latest Messages -->
+        <div class="container">
+            <h2>Latest Messages</h2>
+            <input class="messagebox1" type="text" id="message3" name="message3" placeholder="Type your username">
+            <div class="textbrat" id="messageList"></div>
+            <div class="toggle-container">
+                <input class="messagebox" type="text" id="message1" placeholder="   Type your message">
+                <
+                <button class="messagesend" id="sendMessageBtn">Send Message</button>
+                <input type="checkbox" id="toggle" />
+                <label for="toggle" class="toggle"></label>
+            </div>
+        </div>
+
+        <!-- Usernames -->
+        <div class="grid-item2">
+            <h1 style="text-align: center;">Usernames</h1>
+            <ul class="namelist" id="file-list"></ul>
+        </div>
+
+    </div>
+    <script>
+        // Select the source element (<ul>)
+       // Select the source element (<ul>)
+const fileList = document.getElementById('file-list');
+
+// Select the target element (#message5)
+const message5 = document.getElementById('message3');
+
+// Add a click event listener to the <ul> element
+fileList.addEventListener('click', function(event) {
+    let clickedButton;
+
+    // Check if the click was on one of the <button> elements or its children
+    if (event.target.tagName === 'BUTTON') {
+        // Directly clicked on a button
+        clickedButton = event.target;
+    } else if (event.target.closest('button')) {
+        // Clicked on a child element inside a button
+        clickedButton = event.target.closest('button');
+    }
+
+    // Update the content of the #message5 element
+    if (clickedButton) {
+        const clickedText = clickedButton.querySelector('span').textContent.trim();
+        message5.value = clickedText; // Use .value for input fields
+    } else {
+        message5.value = 'No valid username selected.';
+    }
+});
+    
+        // Fetch file list and populate the <ul> with buttons containing images
+        fetch('/files')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(files => {
+                // Clear the <ul> before adding new items
+                fileList.innerHTML = '';
+    
+                // Populate the <ul> with <button> elements containing images
+                files.forEach(file => {
+                    const button = document.createElement('button');
+                    button.classList.add('file-item'); // Optional: Add a class for styling
+    
+                    // Create a span for the text content
+                    const span = document.createElement('span');
+                    span.textContent = file.split('.').slice(0, -1).join('.');
+    
+                    // Create an img element for the profile picture
+                    const img = document.createElement('img');
+                    img.src = `pfp/${file}`; // Set the image source
+                    img.alt =  file; // Set alt text for accessibility
+                    img.style.width = '50px'; // Set fixed width for the image
+                    img.style.height = '50px'; // Set fixed height for the image
+                    img.style.marginRight = '10px';
+                    img.style.marginLeft = '-10px'; // Add spacing between the image and text
+                         
+                    // Append the img and span to the button
+                    button.appendChild(img);
+                    button.appendChild(span);
+    
+                    // Style the button to align contents horizontally
+                     // Change cursor to pointer on hover
+    
+                    // Append the button to the <ul>
+                    fileList.appendChild(button);
+                });
+            })
+            .catch(error => {
+                console.error('Error fetching file list:', error);
+                message5.value = 'Failed to load usernames.';
+            });
+    </script>
+
+    <script>
+        document.getElementById('uploadBtn').addEventListener('click', uploadFile);
+
+        function uploadFile() {
+            console.log("Button clicked!");
+
+            const fileInput = document.getElementById('fileInput');
+            const itemId = document.getElementById('message3').value;
+            const file = fileInput.files[0];
+
+            if (!file) {
+                alert("Please select a file to upload.");
+                return;
+            }
+
+            if (!itemId) {
+                alert("Please enter an Item ID.");
+                return;
+            }
+          
+            const fileExtension = file.name.split('.').pop();
+            const newFileName = `${itemId}.${fileExtension}`;
+            const renamedFile = new File([file], newFileName, { type: file.type });
+
+            const formData = new FormData();
+            formData.append("file", renamedFile);
+            formData.append("message3", itemId);
+
+            console.log("Sending file...");
+
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => response.json())
+                .then(data => {
+                    console.log("Response received:", data);
+                    if (data.success) {
+                        alert("File uploaded successfully.");
+                    } else {
+                        alert("Failed to upload file.");
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert("An error occurred while uploading the file.");
+                });
+        }
+    </script>
+
+    <script src="bot.js"></script>
+    <script src="enter.js"></script>
+    <script src="avatar.js"></script>
+    <script src="fein.js"></script>
+    <script src="messageget.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

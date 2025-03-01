@@ -1,0 +1,82 @@
+let lastMessageId = null;  Track the last message ID to avoid duplication
+
+async function checkLocalPfp(username, discordAvatarUrl) {
+    const extensions = ['png', 'jpg', 'gif'];
+    for (let ext of extensions) {
+        let localPath = `pfp${username}.${ext}`;
+
+         Check if the image exists
+        let exists = await imageExists(localPath);
+        if (exists) {
+            return localPath;  Return local image if it exists
+        }
+    }
+
+     Fallback to Discord profile picture if local image doesn't exist
+    return discordAvatarUrl;
+}
+
+async function imageExists(imageUrl) {
+    try {
+        const response = await fetch(imageUrl, { method 'HEAD' });
+        return response.ok;  Return true if the image exists
+    } catch (error) {
+        return false;  Return false if an error occurs (image not found)
+    }
+}
+
+async function fetchMessages() {
+    try {
+        const response = await fetch('httplocalhost3000apimessages');
+        const messages = await response.json();
+
+        const messagesList = document.getElementById('messagesList');
+
+         Filter out messages that have already been added by comparing their IDs
+        const newMessages = messages.filter(msg = lastMessageId === null  msg.id  lastMessageId);
+
+         Reverse the new messages to display the most recent at the bottom
+        newMessages.reverse();
+
+        for (let msg of newMessages) {
+            const li = document.createElement('li');
+            li.classList.add('message');
+
+            let cleanMessage = msg.content.replace(g, );
+            let hasColon = cleanMessage.includes();
+
+            let msgcontent = hasColon  cleanMessage.split('').slice(1).join('')  cleanMessage;
+            let msgauthor = hasColon  cleanMessage.split('')[0]  msg.author;  Use msg.author instead
+            
+           
+
+
+
+
+            msgauthor = msgauthor.replace(^@!1053015370115588147, '').trim();  Removes the specific mention
+            msgauthor = msgauthor.replace(^@!d+, '').trim()  ;
+
+          
+            let avatarUrl = await checkLocalPfp(msgauthor, msg.avatar  'default-avatar.png');
+
+            li.innerHTML = `
+                img src=${avatarUrl} class=avatar alt=${msg.author}'s Avatar
+                div
+                    span class=username${msgauthor}span
+                    span class=content${msgcontent}span
+                    ${msg.attachments && msg.attachments.length  0 
+                         msg.attachments.map(att = `img src=${att} class=attachment`).join('')
+                         ''}
+                div
+            `;
+            messagesList.appendChild(li);  Append new messages to the bottom
+            lastMessageId = msg.id;  Update the last message ID to the current one
+        }
+    } catch (error) {
+        console.error(Error fetching messages, error);
+    }
+}
+
+
+ Fetch messages every second
+setInterval(fetchMessages, 1000);
